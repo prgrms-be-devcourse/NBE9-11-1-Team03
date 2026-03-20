@@ -19,7 +19,7 @@ public class Orders {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long orderId;
 
-    @Column(nullable = false, unique = true)
+    @Column(nullable = false)
     private String postalCode;
 
     @Column(nullable = false)

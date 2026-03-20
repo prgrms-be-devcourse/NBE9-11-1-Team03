@@ -6,6 +6,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/v1/orders")
@@ -20,10 +22,23 @@ public class OrderController {
         return ResponseEntity.ok(response);
     }
 
+    @GetMapping
+    public ResponseEntity<List<OrderDto.Response>> getOrders() {  // ← email 없으면 전체 조회
+
+        return ResponseEntity.ok(orderService.getAllOrders());
+    }
+
     // 주문 단건 조회 (결제 페이지에서 주문 확인)
     @GetMapping("/{orderId}")
     public ResponseEntity<OrderDto.Response> getOrder(@PathVariable Long orderId) {
-        OrderDto.Response response = orderService.getOrder(orderId);
+        OrderDto.Response response = orderService.getOrderbyId(orderId);
         return ResponseEntity.ok(response);
+    }
+
+    // 배송 묶기 조회 (관리자용)
+    @GetMapping("/delivery")
+    public ResponseEntity<List<OrderDto.Response>> getOrdersForDelivery(
+            @RequestParam String email) {
+        return ResponseEntity.ok(orderService.getOrdersForDelivery(email));
     }
 }
