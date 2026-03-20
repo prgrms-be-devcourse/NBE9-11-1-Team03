@@ -17,16 +17,16 @@ public class Orders {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long order_id;
+    private Long orderId;
 
     @Column(nullable = false, unique = true)
-    private String postal_code;
+    private String postalCode;
 
     @Column(nullable = false)
-    private String detail_address;
+    private String detailAddress;
 
     @Column(nullable = false)
-    private LocalDateTime order_time;
+    private LocalDateTime orderTime;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "coustomer_id")

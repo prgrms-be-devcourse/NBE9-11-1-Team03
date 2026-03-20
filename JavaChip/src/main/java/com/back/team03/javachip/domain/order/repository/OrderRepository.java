@@ -9,7 +9,7 @@ import java.util.Optional;
 
 public interface OrderRepository extends JpaRepository<Orders, Long> {
 
-    Optional<Orders> findByCustomerAndOrderTimeBetween(
+    Optional<Orders> findByCustomersAndOrderTimeBetween(
             Customers customers,
             LocalDateTime start,
             LocalDateTime end

@@ -1,3 +1,13 @@
 spring:
   application:
     name: JavaChip
+
+  jpa:
+    defer-datasource-initialization: true
+    hibernate:
+      ddl-auto: create
+    show-sql: true
+
+  sql:
+    init:
+      mode: always

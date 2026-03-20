@@ -2,6 +2,7 @@ package com.back.team03.javachip.domain.order.service;
 
 import com.back.team03.javachip.domain.customer.entity.Customers;
 import com.back.team03.javachip.domain.customer.repository.CustomerRepository;
+import com.back.team03.javachip.domain.order.dto.OrderDto;
 import com.back.team03.javachip.domain.order.entity.OrderItems;
 import com.back.team03.javachip.domain.order.entity.Orders;
 import com.back.team03.javachip.domain.order.repository.OrderItemRepository;
@@ -24,76 +25,45 @@ public class OrderService {
     private final OrderItemRepository orderItemRepository;
     private final ProductRepository  productRepository;
 
-    //DTO
-    public record OrderRequestDto(
-            String email,
-            String postal_code,
-            String detail_address,
-            Long product_id,
-            Long prod_quantity
-    ) {}
+    public OrderDto.Response createOrder(OrderDto.Request dto) {
 
-    // 응답 DTO
-    public record OrderResponseDto(
-            Long order_id,
-            String email,
-            String postal_code,
-            String detail_address,
-            LocalDateTime order_time,
-            Long product_id,
-            Long prod_quantity,
-            Long prod_price
-    ) {
-        public OrderResponseDto(Orders order, OrderItems orderItem) {
-            this(
-                    order.getOrder_id(),
-                    order.getCustomers().getEmail(),
-                    order.getPostal_code(),
-                    order.getDetail_address(),
-                    order.getOrder_time(),
-                    orderItem.getProduct().getProdId(),
-                    orderItem.getProdQuantity(),
-                    orderItem.getProdPrice()
-            );
-        }
-    }
-
-    public OrderResponseDto createOrder(OrderRequestDto reqDto){
-
+        // 1. 이메일로 고객 찾기, 없으면 새로 생성
         Customers customer;
-        Optional<Customers> existingCustomer = customerRepository.findByEmail(reqDto.email());
+        Optional<Customers> existingCustomer = customerRepository.findByEmail(dto.email());
 
-        if(existingCustomer.isPresent()){
+        if (existingCustomer.isPresent()) {
             customer = existingCustomer.get();
-        }else{
+        } else {
             customer = new Customers();
-            customer.setEmail(reqDto.email());
+            customer.setEmail(dto.email());
             customerRepository.save(customer);
         }
 
+        // 2. 상품 조회
         Product product;
-        Optional<Product> existingProduct = productRepository.findById(reqDto.product_id);
-        if(existingProduct.isPresent()){
+        Optional<Product> existingProduct = productRepository.findById(dto.productId());
+
+        if (existingProduct.isPresent()) {
             product = existingProduct.get();
-        }else {
+        } else {
             throw new IllegalArgumentException("존재하지 않는 상품입니다.");
         }
 
+        // 3. 오후 2시 기준 당일 주문 있는지 확인
         LocalDateTime start = getOrderStartTime();
         LocalDateTime end = start.plusDays(1);
 
         Orders order;
         Optional<Orders> existingOrder = orderRepository
-                .findByCustomerAndOrderTimeBetween(customer, start, end);
+                .findByCustomersAndOrderTimeBetween(customer, start, end);
 
-        if(existingOrder.isPresent()){
+        if (existingOrder.isPresent()) {
             order = existingOrder.get();
-        }
-        else{
+        } else {
             order = new Orders();
-            order.setPostal_code(reqDto.postal_code());
-            order.setDetail_address(reqDto.detail_address());
-            order.setOrder_time(LocalDateTime.now());
+            order.setPostalCode(dto.postalCode());
+            order.setDetailAddress(dto.detailAddress());
+            order.setOrderTime(LocalDateTime.now());
             order.setCustomers(customer);
             orderRepository.save(order);
         }
@@ -102,11 +72,34 @@ public class OrderService {
         OrderItems orderItem = new OrderItems();
         orderItem.setOrder(order);
         orderItem.setProduct(product);
-        orderItem.setProdQuantity(reqDto.prod_quantity());
-        orderItem.setProdPrice(product.getProdPrice() * reqDto.prod_quantity());
+        orderItem.setProdQuantity(dto.prodQuantity());
+        orderItem.setProdPrice(product.getProdPrice() * dto.prodQuantity());
         orderItemRepository.save(orderItem);
 
-        return new OrderResponseDto(order, orderItem);
+        // 5. Response 반환
+        return new OrderDto.Response(order, orderItem);
+    }
+
+
+    public OrderDto.Response getOrder(Long orderId) {
+
+        Optional<Orders> existingOrder = orderRepository.findById(orderId);
+
+        if (!existingOrder.isPresent()) {
+            throw new IllegalArgumentException("존재하지 않는 주문입니다.");
+        }
+
+        Orders order = existingOrder.get();
+
+        Optional<OrderItems> existingOrderItem = orderItemRepository.findByOrder(order);
+
+        if (!existingOrderItem.isPresent()) {
+            throw new IllegalArgumentException("주문 상세 내역이 없습니다.");
+        }
+
+        OrderItems orderItem = existingOrderItem.get();
+
+        return new OrderDto.Response(order, orderItem);
     }
 
     // 오후 2시 기준 시작 시간 계산
