@@ -1,6 +1,6 @@
 package com.back.team03.javachip.domain.order.entity;
 
-import com.back.team03.javachip.domain.customer.entity.Customers;
+import com.back.team03.javachip.domain.customer.entity.Customer;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -28,7 +28,7 @@ public class Order {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "coustomer_id")
-    private Customers customer;
+    private Customer customer;
 
 
 }
