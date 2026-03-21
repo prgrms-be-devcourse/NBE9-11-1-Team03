@@ -14,8 +14,8 @@ public class Customers {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    private Long CustomerId;
 
-    @Column(nullable = false, unique = true)
+    @Column(nullable = false)
     private String email;
 }

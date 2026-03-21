@@ -3,6 +3,8 @@ package com.back.team03.javachip.domain.order.service;
 import com.back.team03.javachip.domain.customer.entity.Customers;
 import com.back.team03.javachip.domain.customer.repository.CustomerRepository;
 import com.back.team03.javachip.domain.order.dto.OrderDto;
+import com.back.team03.javachip.domain.order.dto.OrderRequestDto;
+import com.back.team03.javachip.domain.order.dto.OrderResponseDto;
 import com.back.team03.javachip.domain.order.entity.OrderItems;
 import com.back.team03.javachip.domain.order.entity.Orders;
 import com.back.team03.javachip.domain.order.repository.OrderItemRepository;
@@ -25,11 +27,17 @@ public class OrderService {
     private final OrderRepository orderRepository;
     private final CustomerRepository customerRepository;
     private final OrderItemRepository orderItemRepository;
-    private final ProductRepository  productRepository;
+    private final ProductRepository productRepository;
 
-    public OrderDto.Response createOrder(OrderDto.Request dto) {
+    //주문 전체 조회
+    public List<Orders> findAll() {
+        return orderRepository.findAll();
+    }
 
-        // 1. 고객 찾기 or 생성
+    // 주문 생성
+    public OrderResponseDto createOrder(OrderRequestDto dto) {
+
+        // 1. 이메일로 고객 찾기, 없으면 새로 생성
         Customers customer;
         Optional<Customers> existingCustomer = customerRepository.findByEmail(dto.email());
 
@@ -41,36 +49,42 @@ public class OrderService {
             customerRepository.save(customer);
         }
 
-        // 2. 상품 조회
-        Optional<Product> existingProduct = productRepository.findById(dto.productId());
-
-        if (!existingProduct.isPresent()) {
-            throw new IllegalArgumentException("존재하지 않는 상품입니다.");
-        }
-
-        Product product = existingProduct.get();
-
-        // 3. 무조건 새 Order 생성 (주문할 때마다)
+        // 2. Order 1개 생성
         Orders order = new Orders();
         order.setPostalCode(dto.postalCode());
         order.setDetailAddress(dto.detailAddress());
-        order.setOrderTime(LocalDateTime.now());  // ← 주문시간 기록
+        order.setOrderTime(LocalDateTime.now());
         order.setCustomers(customer);
         orderRepository.save(order);
 
-        // 4. OrderItem 생성
-        OrderItems orderItem = new OrderItems();
-        orderItem.setOrder(order);
-        orderItem.setProduct(product);
-        orderItem.setProdQuantity(dto.prodQuantity());
-        orderItem.setProdPrice(product.getProdPrice() * dto.prodQuantity());
-        orderItemRepository.save(orderItem);
+        // 3. items 리스트 순회하면서 OrderItem 저장
+        List<OrderItems> savedOrderItems = new ArrayList<>();
 
-        return new OrderDto.Response(order, orderItem);
+        for (OrderRequestDto.ItemRequest item : dto.items()) {
+
+            Optional<Product> existingProduct = productRepository.findById(item.productId());
+
+            if (!existingProduct.isPresent()) {
+                throw new IllegalArgumentException("존재하지 않는 상품입니다.");
+            }
+
+            Product product = existingProduct.get();
+
+            OrderItems orderItem = new OrderItems();
+            orderItem.setOrder(order);
+            orderItem.setProduct(product);
+            orderItem.setProdQuantity(item.prodQuantity());
+            orderItem.setProdPrice(product.getProdPrice() * item.prodQuantity());
+            orderItemRepository.save(orderItem);
+
+            savedOrderItems.add(orderItem);
+        }
+
+        return new OrderResponseDto(order, savedOrderItems);
     }
 
-    //주문 전체 조회
-    public List<OrderDto.Response> getAllOrders() {
+    // 주문 전체 조회
+    public List<OrderResponseDto> getAllOrders() {
 
         List<Orders> orders = orderRepository.findAll();
 
@@ -78,20 +92,18 @@ public class OrderService {
             throw new IllegalArgumentException("주문 내역이 없습니다.");
         }
 
-        List<OrderDto.Response> result = new ArrayList<>();
+        List<OrderResponseDto> result = new ArrayList<>();
 
         for (Orders order : orders) {
             List<OrderItems> orderItems = orderItemRepository.findAllByOrder(order);
-            for (OrderItems orderItem : orderItems) {
-                result.add(new OrderDto.Response(order, orderItem));
-            }
+            result.add(new OrderResponseDto(order, orderItems));
         }
 
         return result;
     }
 
-    //주문id로 조회
-    public OrderDto.Response getOrderbyId(Long orderId) {
+    // 주문 ID로 조회
+    public OrderResponseDto getOrderById(Long orderId) {
 
         Optional<Orders> existingOrder = orderRepository.findById(orderId);
 
@@ -101,21 +113,18 @@ public class OrderService {
 
         Orders order = existingOrder.get();
 
-        Optional<OrderItems> existingOrderItem = orderItemRepository.findByOrder(order);
+        List<OrderItems> orderItems = orderItemRepository.findAllByOrder(order);
 
-        if (!existingOrderItem.isPresent()) {
+        if (orderItems.isEmpty()) {
             throw new IllegalArgumentException("주문 상세 내역이 없습니다.");
         }
 
-        OrderItems orderItem = existingOrderItem.get();
-
-        return new OrderDto.Response(order, orderItem);
+        return new OrderResponseDto(order, orderItems);
     }
 
-    //2시를 기준으로 똑같은 이메일 주문 조회
-    public List<OrderDto.Response> getOrdersForDelivery(String email) {
+    // 이메일로 주문 조회
+    public List<OrderResponseDto> getOrdersByEmail(String email) {
 
-        // 1. 이메일로 고객 찾기
         Optional<Customers> existingCustomer = customerRepository.findByEmail(email);
 
         if (!existingCustomer.isPresent()) {
@@ -124,11 +133,36 @@ public class OrderService {
 
         Customers customer = existingCustomer.get();
 
-        // 2. 오후 2시 기준 시작 시간 계산
+        List<Orders> orders = orderRepository.findAllByCustomers(customer);
+
+        if (orders.isEmpty()) {
+            throw new IllegalArgumentException("주문 내역이 없습니다.");
+        }
+
+        List<OrderResponseDto> result = new ArrayList<>();
+
+        for (Orders order : orders) {
+            List<OrderItems> orderItems = orderItemRepository.findAllByOrder(order);
+            result.add(new OrderResponseDto(order, orderItems));
+        }
+
+        return result;
+    }
+
+    // 오후 2시 기준 배송 묶음 조회
+    public List<OrderResponseDto> getOrdersForDelivery(String email) {
+
+        Optional<Customers> existingCustomer = customerRepository.findByEmail(email);
+
+        if (!existingCustomer.isPresent()) {
+            throw new IllegalArgumentException("존재하지 않는 고객입니다.");
+        }
+
+        Customers customer = existingCustomer.get();
+
         LocalDateTime start = getOrderStartTime();
         LocalDateTime end = start.plusDays(1);
 
-        // 3. 해당 시간 사이의 주문 전체 조회
         List<Orders> orders = orderRepository
                 .findAllByCustomersAndOrderTimeBetween(customer, start, end);
 
@@ -136,14 +170,11 @@ public class OrderService {
             throw new IllegalArgumentException("해당 시간대 주문이 없습니다.");
         }
 
-        // 4. 각 주문의 OrderItem과 함께 반환
-        List<OrderDto.Response> result = new ArrayList<>();
+        List<OrderResponseDto> result = new ArrayList<>();
 
         for (Orders order : orders) {
             List<OrderItems> orderItems = orderItemRepository.findAllByOrder(order);
-            for (OrderItems orderItem : orderItems) {
-                result.add(new OrderDto.Response(order, orderItem));
-            }
+            result.add(new OrderResponseDto(order, orderItems));
         }
 
         return result;
@@ -151,7 +182,12 @@ public class OrderService {
 
     // 오후 2시 기준 시작 시간 계산
     private LocalDateTime getOrderStartTime() {
-        LocalDateTime now = LocalDateTime.now();
+        // 테스트용 - 오후 3시로 고정 (2시 이후)
+//        LocalDateTime now = LocalDateTime.of(2026, 3, 21, 15, 0);
+
+//        // 실제 사용할 때는 아래로 변경
+         LocalDateTime now = LocalDateTime.now();
+//
         LocalDateTime todayAt2pm = now.toLocalDate().atTime(14, 0);
 
         if (now.isBefore(todayAt2pm)) {

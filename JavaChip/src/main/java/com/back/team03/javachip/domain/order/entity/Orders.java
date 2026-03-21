@@ -31,6 +31,4 @@ public class Orders {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "coustomer_id")
     private Customers customers;
-
-
 }
