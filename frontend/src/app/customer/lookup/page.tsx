@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import OrderList from "./OrderList";
+import OrderList from "./list/page";
 
 type Item = {
   productId: number;
