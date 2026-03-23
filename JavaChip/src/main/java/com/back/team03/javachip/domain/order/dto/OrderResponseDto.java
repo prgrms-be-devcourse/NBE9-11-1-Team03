@@ -26,7 +26,7 @@ public record OrderResponseDto(
     public OrderResponseDto(Orders order, List<OrderItems> orderItems) {
         this(
                 order.getOrderId(),
-                order.getCustomers().getEmail(),
+                order.getCustomer().getEmail(),
                 order.getPostalCode(),
                 order.getDetailAddress(),
                 order.getOrderTime(),
