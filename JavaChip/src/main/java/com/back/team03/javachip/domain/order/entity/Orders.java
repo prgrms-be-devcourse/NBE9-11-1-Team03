@@ -11,7 +11,8 @@ import java.util.List;
 
 @Entity
 @Table(name = "orders") // order는 예약어라 명시 추천
-@Getter @Setter
+@Getter 
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
@@ -30,7 +31,7 @@ public class Orders {
     @Column(nullable = false)
     private LocalDateTime orderTime;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY) //양방향관계에서 무한순환 참조해결을위해 lazy 추가
     @JoinColumn(name = "customer_id")
     private Customers customer;
 
