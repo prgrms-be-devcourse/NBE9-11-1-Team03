@@ -1,3 +1,4 @@
+/*
 package com.back.team03.javachip.domain.order.dto;
 
 import com.back.team03.javachip.domain.order.entity.OrderItems;
@@ -12,3 +13,4 @@ public record OrderDto (
         String detailAddress,
         LocalDateTime orderTime
 ) {}
+*/
