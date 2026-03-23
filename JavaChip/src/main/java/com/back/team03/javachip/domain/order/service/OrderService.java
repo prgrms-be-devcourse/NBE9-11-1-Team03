@@ -53,7 +53,7 @@ public class OrderService {
         order.setPostalCode(dto.postalCode());
         order.setDetailAddress(dto.detailAddress());
         order.setOrderTime(LocalDateTime.now());
-        order.setCustomer(customer);
+        order.setCustomers(customer);
         orderRepository.save(order);
 
         // 3. items 리스트 순회하면서 OrderItem 저장
@@ -132,7 +132,7 @@ public class OrderService {
 
         Customers customer = existingCustomer.get();
 
-        List<Orders> orders = orderRepository.findAllByCustomer(customer);
+        List<Orders> orders = orderRepository.findAllByCustomers(customer);
 
         if (orders.isEmpty()) {
             throw new IllegalArgumentException("주문 내역이 없습니다.");
@@ -163,7 +163,7 @@ public class OrderService {
         LocalDateTime end = start.plusDays(1);
 
         List<Orders> orders = orderRepository
-                .findAllByCustomerAndOrderTimeBetween(customer, start, end);
+                .findAllByCustomersAndOrderTimeBetween(customer, start, end);
 
         if (orders.isEmpty()) {
             throw new IllegalArgumentException("해당 시간대 주문이 없습니다.");

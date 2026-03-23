@@ -23,6 +23,6 @@ public class Customers {
     @Column(nullable = false)
     private String email;
 
-    @OneToMany(mappedBy = "customer")
+    @OneToMany(mappedBy = "customers")
     private List<Orders> orders = new ArrayList<>();
 }

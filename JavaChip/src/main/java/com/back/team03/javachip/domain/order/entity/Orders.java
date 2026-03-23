@@ -33,7 +33,7 @@ public class Orders {
 
     @ManyToOne(fetch = FetchType.LAZY) //양방향관계에서 무한순환 참조해결을위해 lazy 추가
     @JoinColumn(name = "customer_id")
-    private Customers customer;
+    private Customers customers;
 
     @OneToMany(mappedBy = "order")
     private List<OrderItems> orderItems = new ArrayList<>();

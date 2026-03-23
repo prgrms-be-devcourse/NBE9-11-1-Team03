@@ -10,9 +10,9 @@ import java.util.Optional;
 
 public interface OrderRepository extends JpaRepository<Orders, Long> {
 
-    List<Orders> findAllByCustomer(Customers customers);
+    List<Orders> findAllByCustomers(Customers customers);
 
-    List<Orders> findAllByCustomerAndOrderTimeBetween(
+    List<Orders> findAllByCustomersAndOrderTimeBetween(
             Customers customers,
             LocalDateTime start,
             LocalDateTime end
