@@ -2,15 +2,14 @@ package com.back.team03.javachip.domain.order.entity;
 
 import com.back.team03.javachip.domain.product.entity.Product;
 import jakarta.persistence.*;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
 @Entity
 @Table(name = "order_items")
-@Getter
-@Setter
+@Getter @Setter
 @NoArgsConstructor
+@AllArgsConstructor
+@Builder
 public class OrderItems {
 
     @Id

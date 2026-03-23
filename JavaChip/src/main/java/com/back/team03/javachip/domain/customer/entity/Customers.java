@@ -1,21 +1,28 @@
 package com.back.team03.javachip.domain.customer.entity;
+import com.back.team03.javachip.domain.order.entity.Orders;
 
 import jakarta.persistence.*;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
+
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "customers")
-@Getter
+@Getter 
 @Setter
 @NoArgsConstructor
+@AllArgsConstructor
+@Builder
 public class Customers {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long CustomerId;
+    private Long customerId;
 
     @Column(nullable = false)
     private String email;
+
+    @OneToMany(mappedBy = "customer")
+    private List<Orders> orders = new ArrayList<>();
 }

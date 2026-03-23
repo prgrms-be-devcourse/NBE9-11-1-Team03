@@ -1,18 +1,21 @@
 package com.back.team03.javachip.domain.order.entity;
 
-import com.back.team03.javachip.domain.customer.entity.Customers;
 import jakarta.persistence.*;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
+
+import com.back.team03.javachip.domain.customer.entity.*;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
-@Table(name = "orders")
-@Getter
+@Table(name = "orders") // order는 예약어라 명시 추천
+@Getter 
 @Setter
 @NoArgsConstructor
+@AllArgsConstructor
+@Builder
 public class Orders {
 
     @Id
@@ -28,7 +31,10 @@ public class Orders {
     @Column(nullable = false)
     private LocalDateTime orderTime;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "coustomer_id")
-    private Customers customers;
+    @ManyToOne(fetch = FetchType.LAZY) //양방향관계에서 무한순환 참조해결을위해 lazy 추가
+    @JoinColumn(name = "customer_id")
+    private Customers customer;
+
+    @OneToMany(mappedBy = "order")
+    private List<OrderItems> orderItems = new ArrayList<>();
 }
