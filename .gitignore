@@ -35,3 +35,33 @@ out/
 
 ### VS Code ###
 .vscode/
+
+### Custom Added ###
+# Java & Gradle build files
+build/
+.gradle/
+bin/
+out/
+gradle/
+gradlew
+gradlew.bat
+
+# IntelliJ & IDE files
+.idea/
+*.iml
+*.iws
+*.ipr
+
+# Frontend (Next.js / Node)
+node_modules/
+.next/
+dist/
+.env*.local
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.vercel
+
+# System Files
+.DS_Store
+Thmubs.db
