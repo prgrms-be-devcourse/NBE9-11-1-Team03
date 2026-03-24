@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { fetchApi } from "@/lib/client";
 
 interface Product {
@@ -17,6 +18,7 @@ export default function MenuPage() {
   const [description, setDescription] = useState("");
   const [editId, setEditId] = useState<number | null>(null);
   const [toast, setToast] = useState("");
+  const router = useRouter();
 
   useEffect(() => {
     fetchProducts();
@@ -100,7 +102,16 @@ export default function MenuPage() {
           <div style={{ fontFamily: "'Playfair Display', serif", color: "black", fontSize: "1.3rem" }}>
             Grids <span style={{ color: "#3a6b8a" }}>&</span> Circles
           </div>
-          <div style={{ fontSize: "0.85rem", color: "#7a7068" }}>관리자 페이지</div>
+          <button
+            onClick={() => router.push("/admin/admin-order")}
+            style={{
+              background: "#fff", border: "1.5px solid #3a6b8a",
+              color: "#3a6b8a", fontFamily: "'DM Sans', sans-serif",
+              fontSize: "0.85rem", fontWeight: 500,
+              padding: "8px 18px", borderRadius: "20px", cursor: "pointer",
+            }}>
+            주문 조회
+          </button>
         </header>
 
         {/* 페이지 타이틀 */}
