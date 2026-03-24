@@ -36,4 +36,8 @@ public class Orders {
 
     @OneToMany(mappedBy = "order")
     private List<OrderItems> orderItems = new ArrayList<>();
+
+    @Column(nullable = false) // 관리자에서 주문 상태 조회를 위한 컬럼
+    private boolean isOrderState = false; // false: 주문 접수, true: 주문 완료
+
 }
