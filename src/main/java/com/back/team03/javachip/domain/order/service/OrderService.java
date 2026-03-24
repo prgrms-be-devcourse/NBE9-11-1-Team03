@@ -5,13 +5,14 @@ import com.back.team03.javachip.domain.customer.entity.Customers;
 import com.back.team03.javachip.domain.customer.repository.CustomerRepository;
 import com.back.team03.javachip.domain.order.dto.OrderRequestDto;
 import com.back.team03.javachip.domain.order.dto.OrderResponseDto;
+import com.back.team03.javachip.domain.order.dto.OrderUpdateRequest;
 import com.back.team03.javachip.domain.order.entity.OrderItems;
 import com.back.team03.javachip.domain.order.entity.Orders;
 import com.back.team03.javachip.domain.order.repository.OrderItemRepository;
 import com.back.team03.javachip.domain.order.repository.OrderRepository;
 import com.back.team03.javachip.domain.product.entity.Product;
 import com.back.team03.javachip.domain.product.repository.ProductRepository;
-
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -195,5 +196,55 @@ public class OrderService {
         } else {
             return todayAt2pm;
         }
+    }
+
+    @Transactional
+    public OrderResponseDto updateOrder(Long orderId, OrderUpdateRequest dto) {
+        Orders order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 주문입니다."));
+
+        // 1. 이메일(고객) 수정 로직
+        if (dto.getEmail() != null) {
+            Customers customer = customerRepository.findByEmail(dto.getEmail())
+                    .orElseGet(() -> customerRepository.save(
+                            Customers.builder().email(dto.getEmail()).build()
+                    ));
+            order.setCustomers(customer);
+        }
+
+        // 2. 주소 수정
+        if (dto.getDetailAddress() != null) {
+            order.setDetailAddress(dto.getDetailAddress());
+        }
+
+        // 3. 수량 및 가격 수정 (첫 번째 아이템 기준)
+        if (dto.getQuantity() != null) {
+            List<OrderItems> orderItems = orderItemRepository.findAllByOrder(order);
+            if (!orderItems.isEmpty()) {
+                OrderItems item = orderItems.get(0);
+                item.setProdQuantity(dto.getQuantity().longValue());
+                item.setProdPrice(item.getProduct().getProdPrice() * dto.getQuantity());
+                orderItemRepository.save(item);
+            }
+        }
+
+        return new OrderResponseDto(order, orderItemRepository.findAllByOrder(order));
+    }
+
+    // 주문 삭제 (관리자용)
+    @Transactional
+    public void deleteOrder(Long orderId) {
+        // 1. 삭제할 주문이 DB에 있는지 확인
+        Orders order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 주문입니다."));
+
+        // 2. 이 주문에 연결된 상품 상세(OrderItems)를 먼저 삭제 (외래키 제약 조건 해결)
+        List<OrderItems> items = orderItemRepository.findAllByOrder(order);
+        if (!items.isEmpty()) {
+            orderItemRepository.deleteAll(items);
+        }
+
+        // 3. 주문(Orders) 삭제
+        orderRepository.delete(order);
     }
 }
