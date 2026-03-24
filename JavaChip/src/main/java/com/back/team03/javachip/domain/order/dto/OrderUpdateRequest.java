@@ -1,12 +1,21 @@
 package com.back.team03.javachip.domain.order.dto;
 
 import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.Setter;
+
+import java.util.List;
 
 @Getter
-@NoArgsConstructor
+@Setter
 public class OrderUpdateRequest {
     private String email;
     private String detailAddress;
-    private Integer quantity;
+    private List<ItemUpdateRequest> items;
+
+    @Getter
+    @Setter
+    public static class ItemUpdateRequest {
+        private Long productId;
+        private Integer quantity;
+    }
 }

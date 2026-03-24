@@ -88,8 +88,8 @@
                     <input type="text" class="form-control" id="postcode" value="12345">
                 </div>
                 <div class="mb-3">
-                    <label for="quantity" class="form-label">주문 수량 (기본 상품)</label>
-                    <input type="number" class="form-control" id="quantity" value="1">
+                    <label class="form-label">품목별 수량</label>
+                    <div id="productQuantityContainer"></div>
                 </div>
             </form>
 
@@ -103,11 +103,56 @@
 
 <script>
     let editModeOrderId = null;
+    let products = [];
     const API_BASE_URL = '/api/v1/orders'; // API 주소 공통화
+    const PRODUCT_API_URL = '/api/v1/products';
 
     window.onload = function () {
-        loadAllOrders();
+        fetch(PRODUCT_API_URL)
+            .then(res => res.json())
+            .then(data => {
+                products = data || [];
+                renderProductQuantityInputs();
+                loadAllOrders();
+            })
+            .catch(err => console.error('Error loading products:', err));
     };
+
+    function renderProductQuantityInputs(order = null) {
+        const container = document.getElementById('productQuantityContainer');
+        container.innerHTML = '';
+
+        products.forEach(product => {
+            const matchedItem = order && order.items
+                ? order.items.find(item => item.productId === product.prodId)
+                : null;
+
+            const value = matchedItem ? matchedItem.prodQuantity : 0;
+
+            const block = `
+                <div class="mb-3 product-qty-row" data-product-id="${product.prodId}">
+                    <label for="quantity-${product.prodId}" class="form-label">${product.prodName} 수량</label>
+                    <input
+                        type="number"
+                        class="form-control product-quantity-input"
+                        id="quantity-${product.prodId}"
+                        data-product-id="${product.prodId}"
+                        min="0"
+                        value="${value}"
+                    >
+                </div>
+            `;
+            container.insertAdjacentHTML('beforeend', block);
+        });
+    }
+
+    function collectProductItems() {
+        return Array.from(document.querySelectorAll('.product-quantity-input'))
+            .map(input => ({
+                productId: Number(input.dataset.productId),
+                quantity: parseInt(input.value, 10) || 0
+            }));
+    }
 
     function loadAllOrders() {
         document.getElementById('searchEmail').value = '';
@@ -137,15 +182,17 @@
 
                 data.forEach(order => {
                     // DTO 구조에 맞춰 order.items[0].prodQuantity 등을 참조 (현재 DTO는 items 리스트임)
-                    const qty = (order.items && order.items.length > 0) ? order.items[0].prodQuantity : 0;
+                    const qtyText = (order.items && order.items.length > 0)
+                        ? order.items.map(item => `${item.prodName} ${item.prodQuantity}개`).join(', ')
+                        : '품목 없음';
 
                     const item = `
                     <li class="list-group-item d-flex justify-content-between align-items-center order-row">
                         <div class="col-1"><b>#${order.orderId}</b></div>
                         <div class="col-3">${order.email}</div>
-                        <div class="col-4 text-muted">${order.detailAddress} <span class="badge bg-light text-dark border">${qty}개</span></div>
+                        <div class="col-4 text-muted">${order.detailAddress} <span class="badge bg-light text-dark border">${qtyText}</span></div>
                         <div class="col-4 text-end">
-                            <button class="btn btn-sm btn-outline-primary" onclick="fillEditForm(${order.orderId}, '${order.email}', '${order.detailAddress}', ${qty})">수정</button>
+                            <button class="btn btn-sm btn-outline-primary" onclick='fillEditForm(${JSON.stringify(order)})'>수정</button>
                             <button class="btn btn-sm btn-outline-danger" onclick="deleteOrder(${order.orderId})">삭제</button>
                         </div>
                     </li>`;
@@ -161,11 +208,23 @@
     }
 
     function createOrder() {
+        const items = collectProductItems()
+            .filter(item => item.quantity > 0)
+            .map(item => ({
+                productId: item.productId,
+                prodQuantity: item.quantity
+            }));
+
+        if (items.length === 0) {
+            alert('최소 한 개 이상의 품목 수량을 입력해주세요.');
+            return;
+        }
+
         const payload = {
             email: document.getElementById('email').value,
             postalCode: document.getElementById('postcode').value,
             detailAddress: document.getElementById('address').value,
-            items: [{productId: 1, prodQuantity: parseInt(document.getElementById('quantity').value)}]
+            items
         };
 
         fetch(API_BASE_URL, {
@@ -177,6 +236,7 @@
                 if (res.ok) {
                     alert("✅ 주문이 생성되었습니다.");
                     document.getElementById('orderForm').reset();
+                    renderProductQuantityInputs();
                     loadAllOrders();
                 } else {
                     alert("❌ 생성 실패!");
@@ -184,11 +244,13 @@
             });
     }
 
-    function fillEditForm(orderId, email, address, quantity) {
-        editModeOrderId = orderId;
-        document.getElementById('email').value = email;
-        document.getElementById('address').value = address;
-        document.getElementById('quantity').value = quantity;
+    function fillEditForm(order) {
+        editModeOrderId = order.orderId;
+        document.getElementById('email').value = order.email ?? '';
+        document.getElementById('address').value = order.detailAddress ?? '';
+        document.getElementById('postcode').value = order.postalCode ?? '12345';
+        renderProductQuantityInputs(order);
+
         document.getElementById('formTitle').innerText = "수동 주문 수정";
 
         const btn = document.getElementById('submitBtn');
@@ -201,6 +263,8 @@
     function cancelEdit() {
         editModeOrderId = null;
         document.getElementById('orderForm').reset();
+        document.getElementById('postcode').value = '12345';
+        renderProductQuantityInputs();
         document.getElementById('formTitle').innerText = "수동 주문 생성";
 
         const btn = document.getElementById('submitBtn');
@@ -210,13 +274,22 @@
     }
 
     function executeUpdate(orderId) {
+        const items = collectProductItems().map(item => ({
+            productId: item.productId,
+            quantity: item.quantity
+        }));
+
+        if (items.some(item => item.quantity < 0)) {
+            alert('수량은 0 이상이어야 합니다.');
+            return;
+        }
+
         const payload = {
             email: document.getElementById('email').value,
             detailAddress: document.getElementById('address').value,
-            quantity: parseInt(document.getElementById('quantity').value)
+            items
         };
 
-        // 백엔드 컨트롤러가 @PatchMapping이므로 PATCH로 전송
         fetch(`${API_BASE_URL}/${orderId}`, {
             method: 'PATCH',
             headers: {'Content-Type': 'application/json'},
