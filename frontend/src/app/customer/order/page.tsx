@@ -119,7 +119,7 @@ export default function OrderPage() {
                     </div>
                     <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
                         <button
-                            onClick={() => router.push("/customer/orders/lookup/auth")}
+                            onClick={() => router.push("/customer/lookup/auth")}
                             style={{
                                 background: "#fff", border: "1.5px solid #3a6b8a",
                                 color: "#3a6b8a", fontFamily: "'DM Sans', sans-serif",
