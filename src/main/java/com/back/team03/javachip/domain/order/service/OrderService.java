@@ -14,6 +14,7 @@ import com.back.team03.javachip.domain.product.repository.ProductRepository;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -196,4 +197,79 @@ public class OrderService {
             return todayAt2pm;
         }
     }
+
+    ///  관리자용 메서드 추가
+    // 품목별 조회
+    public List<OrderResponseDto> getOrdersByProduct(Long prodId) {
+
+        productRepository.findById(prodId)
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 상품입니다."));
+
+        List<Orders> orders = orderRepository.findAllByProductId(prodId);
+
+        if (orders.isEmpty()) {
+            throw new IllegalArgumentException("해당 상품의 주문이 없습니다.");
+        }
+
+        List<OrderResponseDto> result = new ArrayList<>();
+        for (Orders order : orders) {
+            List<OrderItems> orderItems = orderItemRepository.findAllByOrder(order);
+            result.add(new OrderResponseDto(order, orderItems));
+        }
+        return result;
+    }
+
+    // 상태별 조회
+    public List<OrderResponseDto> getOrdersByState(boolean isOrderState) {
+
+        List<Orders> orders = orderRepository.findAllByIsOrderState(isOrderState);
+
+        if (orders.isEmpty()) {
+            throw new IllegalArgumentException("해당 상태의 주문이 없습니다.");
+        }
+
+        List<OrderResponseDto> result = new ArrayList<>();
+        for (Orders order : orders) {
+            List<OrderItems> orderItems = orderItemRepository.findAllByOrder(order);
+            result.add(new OrderResponseDto(order, orderItems));
+        }
+        return result;
+    }
+
+    // 오후 2시 기준 미완료 전체 주문 조회
+    public List<OrderResponseDto> getPendingOrdersForDelivery() {
+
+        LocalDateTime start = getOrderStartTime(); // 기존 메서드 재사용
+        LocalDateTime end = start.plusDays(1);
+
+        List<Orders> orders = orderRepository.findAllByIsOrderStateAndOrderTimeBetween(
+                false, start, end
+        );
+
+        if (orders.isEmpty()) {
+            throw new IllegalArgumentException("해당 시간대 미완료 주문이 없습니다.");
+        }
+
+        List<OrderResponseDto> result = new ArrayList<>();
+        for (Orders order : orders) {
+            List<OrderItems> orderItems = orderItemRepository.findAllByOrder(order);
+            result.add(new OrderResponseDto(order, orderItems));
+        }
+        return result;
+    }
+
+    // 주문 상태 변경
+    @Transactional
+    public void updateOrderState(Long orderId) {
+
+        Orders order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 주문입니다."));
+
+        order.setOrderState(true); // Lombok - @Setter가 bool 타입에서 "is" 를 자동으로 제거함
+        orderRepository.save(order);
+    }
+
+    ///  관리자 메서드 종료
+
+
 }

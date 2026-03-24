@@ -37,7 +37,8 @@ public class Orders {
     @OneToMany(mappedBy = "order")
     private List<OrderItems> orderItems = new ArrayList<>();
 
-    @Column(nullable = false)
+    @Column(nullable = false) // 관리자 조회를 위한 상태값 추가
     private boolean isOrderState = false; // false: 주문 접수, true: 주문 완료
+     // // Lombok - @Setter가 bool 타입에서 "is" 를 자동으로 제거함
 
 }

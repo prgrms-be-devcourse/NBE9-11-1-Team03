@@ -14,6 +14,7 @@ public record OrderResponseDto(
         String detailAddress,
         LocalDateTime orderTime,
         Long totalPrice,
+        boolean isOrderState,  // 추가: 관리자 주문 조회 시 필요
         List<ItemResponse> items
 ) {
     public record ItemResponse(
@@ -33,6 +34,7 @@ public record OrderResponseDto(
                 orderItems.stream()
                         .mapToLong(OrderItems::getProdPrice)
                         .sum(),
+                order.isOrderState(),  // 추가
                 orderItems.stream()
                         .map(item -> new ItemResponse(
                                 item.getProduct().getProdId(),
