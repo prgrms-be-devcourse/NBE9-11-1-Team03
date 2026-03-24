@@ -128,7 +128,9 @@ export default function OrderPage() {
                             }}>
                             주문조회 하기
                         </button>
-                        <div style={{
+                        <div
+                            onClick={() => router.push("/admin/login")} 
+                            style={{
                             width: "36px", height: "36px", borderRadius: "50%",
                             background: "#ede8e2", border: "1.5px solid #ddd6cc",
                             display: "flex", alignItems: "center", justifyContent: "center",
