@@ -32,4 +32,7 @@ public class ManagerController {
         managerService.logout(session);
         return ResponseEntity.ok("로그아웃 성공");
     }
+
+
+
 }
