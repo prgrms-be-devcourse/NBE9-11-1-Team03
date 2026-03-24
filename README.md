@@ -25,7 +25,7 @@ Frontend
 ![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?style=flat&logo=typescript&logoColor=white)
 
 📁 프로젝트 구조
-
+```
 JavaChip/
 ├── backend/
 │   └── src/main/java/com/back/team03/javachip/
@@ -66,7 +66,7 @@ JavaChip/
         ├── types/                    # TypeScript 타입 정의
         ├── lib/                      # API 호출 등 유틸리티
         └── styles/                   # 글로벌 스타일
-
+```
 🗄 ERD
 
 erDiagram
