@@ -47,35 +47,25 @@ JavaChip/
 │           ├── config/
 │           └── springdoc/
 └── frontend/
-    └── 📦 src
-         ┣ 📂 app
-         ┃ ┣ 📂 customer                 # 고객용 라우트 그룹 (URL에는 표시되지 않음)
-         ┃ ┃ ┣ 📂 order                    # 주문 페이지 (선택한 상품 요약 및 주문 폼 입력)
-         ┃ ┃ ┃ ┗ 📜 page.tsx
-         ┃ ┃ ┣ 📂 success
-         ┃ ┃ ┃ ┗ 📂 [transactionId]        # 결제 완료: 방금 결제한 해당 내역만 출력
-         ┃ ┃ ┃   ┗ 📜 page.tsx
-         ┃ ┃ ┗ 📂 lookup
-         ┃ ┃   ┣ 📂 auth                   # 주문조회 인증 (이메일 입력)
-         ┃ ┃   ┃ ┗ 📜 page.tsx
-         ┃ ┃   ┗ 📂 list                   # 이메일 조회: 입력된 이메일의 모든 주문 내역 출력
-         ┃ ┃     ┗ 📜 page.tsx
-         ┃ ┣ 📂 admin                      # 관리자용 라우트 그룹
-         ┃ ┃ ┣ 📂 login                    # 관리자 로그인
-         ┃ ┃ ┃ ┗ 📜 page.tsx
-         ┃ ┃ ┣ 📂 menu                     # 관리자 - 메뉴 관리
-         ┃ ┃ ┃ ┗ 📜 page.tsx
-         ┃ ┃ ┗ 📂 admin-order              # 관리자 - 주문 관리
-         ┃ ┃   ┗ 📜 page.tsx
-         ┃ ┣ 📜 layout.tsx                 # 전체 앱 공통 레이아웃 (헤더, 푸터 등)
-         ┃ ┗ 📜 page.tsx                   # 🌟 메인 홈페이지 (기본 상품/커피 목록 출력 페이지)
-         ┣ 📂 components
-         ┃ ┣ 📂 ui                         # 버튼, 인풋 등 공통 UI 컴포넌트
-         ┃ ┣ 📂 customer                   # 고객용 UI (상품 카드 등)
-         ┃ ┗ 📂 admin                      # 관리자용 UI (테이블 등)
-         ┣ 📂 types                        # TSX 타입/인터페이스 (상품, 주문 내역 등)
-         ┣ 📂 lib                          # API 호출 등 유틸리티 함수
-         ┗ 📂 styles                       # 글로벌 스타일
+    └── src/
+        ├── app/
+        │   ├── (customer)/           # 고객용 라우트 그룹
+        │   │   ├── order/            # 주문 페이지
+        │   │   ├── success/          # 결제 완료 페이지
+        │   │   └── lookup/           # 주문 조회 (auth, list)
+        │   ├── (admin)/              # 관리자용 라우트 그룹
+        │   │   ├── login/
+        │   │   ├── menu/             # 메뉴 관리
+        │   │   └── admin-order/      # 주문 관리
+        │   ├── layout.tsx            # 공통 레이아웃
+        │   └── page.tsx              # 메인 홈페이지
+        ├── components/
+        │   ├── ui/                   # 공통 UI 컴포넌트
+        │   ├── customer/             # 고객 전용 컴포넌트
+        │   └── admin/                # 관리자 전용 컴포넌트
+        ├── types/                    # TypeScript 타입 정의
+        ├── lib/                      # API 호출 등 유틸리티
+        └── styles/                   # 글로벌 스타일
 
 🗄 ERD
 
