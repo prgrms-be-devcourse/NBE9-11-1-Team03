@@ -1,0 +1,268 @@
+<!doctype html>
+<html lang="ko">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background: #ddd;
+        }
+
+        .card {
+            margin: auto;
+            max-width: 950px;
+            width: 90%;
+            box-shadow: 0 6px 20px 0 rgba(0, 0, 0, 0.19);
+            border-radius: 1rem;
+            border: transparent;
+        }
+
+        .summary {
+            background-color: #ddd;
+            border-top-right-radius: 1rem;
+            border-bottom-right-radius: 1rem;
+            padding: 4vh;
+            color: rgb(65, 65, 65);
+        }
+
+        @media (max-width: 767px) {
+            .summary {
+                border-top-right-radius: unset;
+                border-bottom-left-radius: 1rem;
+            }
+        }
+
+        .row {
+            margin: 0;
+        }
+
+        .products {
+            width: 100%;
+        }
+
+        .order-row {
+            font-size: 0.9rem;
+            border-bottom: 1px solid #eee;
+            padding: 10px 0;
+        }
+    </style>
+    <title>자바칩 관리자 페이지</title>
+</head>
+<body class="container-fluid">
+<div class="row justify-content-center m-4">
+    <h1 class="text-center">Grids & Circle 관리자 센터</h1>
+</div>
+<div class="card">
+    <div class="row">
+        <div class="col-md-8 mt-4 d-flex flex-column align-items-start p-3 pt-0">
+            <div class="d-flex justify-content-between w-100 align-items-center mb-3">
+                <h5><b>전체 주문 목록</b></h5>
+                <div class="d-flex gap-2">
+                    <input type="email" id="searchEmail" class="form-control form-control-sm" placeholder="이메일 검색">
+                    <button class="btn btn-sm btn-outline-dark" onclick="loadAllOrders()">전체 조회</button>
+                    <button class="btn btn-sm btn-dark" onclick="loadOrders()">검색</button>
+                </div>
+            </div>
+            <ul class="list-group products" id="orderList">
+                <li class="list-group-item text-center">조회 버튼을 눌러주세요.</li>
+            </ul>
+        </div>
+
+        <div class="col-md-4 summary p-4">
+            <div>
+                <h2 id="formTitle">수동 주문 생성</h2>
+            </div>
+            <hr>
+            <form id="orderForm">
+                <div class="mb-3">
+                    <label for="email" class="form-label">고객 이메일</label>
+                    <input type="email" class="form-control mb-1" id="email" placeholder="example@email.com">
+                </div>
+                <div class="mb-3">
+                    <label for="address" class="form-label">배송 주소</label>
+                    <input type="text" class="form-control mb-1" id="address" placeholder="상세 주소를 입력하세요">
+                </div>
+                <div class="mb-3">
+                    <label for="postcode" class="form-label">우편번호</label>
+                    <input type="text" class="form-control" id="postcode" value="12345">
+                </div>
+                <div class="mb-3">
+                    <label for="quantity" class="form-label">주문 수량 (기본 상품)</label>
+                    <input type="number" class="form-control" id="quantity" value="1">
+                </div>
+                <div class="text-muted mb-3" style="font-size: 0.8rem;">관리자 권한으로 결제 단계를 건너뛰고 주문을 바로 생성합니다.</div>
+            </form>
+
+            <button class="btn btn-dark col-12" id="submitBtn" onclick="submitOrder()">주문 생성하기</button>
+            <button class="btn btn-outline-secondary col-12 mt-2" id="cancelBtn" style="display: none;"
+                    onclick="cancelEdit()">수정 취소
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+    let editModeOrderId = null; // 현재 수정 중인 주문 번호를 기억하는 변수
+
+    // 화면 켜지면 무조건 전체 조회부터 하도록 수정!
+    window.onload = function () {
+        loadAllOrders();
+    };
+
+    function loadAllOrders() {
+        document.getElementById('searchEmail').value = '';
+        fetchOrders('/api/orders');
+    }
+
+    function loadOrders() {
+        const email = document.getElementById('searchEmail').value;
+        if (!email) {
+            alert("검색할 이메일을 입력해주세요!");
+            return;
+        }
+        fetchOrders(`/api/orders?email=${email}`);
+    }
+
+    function fetchOrders(url) {
+        const orderList = document.getElementById('orderList');
+
+        fetch(url)
+            .then(res => res.json())
+            .then(data => {
+                orderList.innerHTML = '';
+                if (data.length === 0) {
+                    orderList.innerHTML = '<li class="list-group-item text-center">주문 내역이 없습니다.</li>';
+                    return;
+                }
+
+                data.forEach(order => {
+                    // 💡 목록에 수량 뱃지가 추가되고, 수정 버튼 클릭시 폼으로 데이터를 보냅니다!
+                    const item = `
+                    <li class="list-group-item d-flex justify-content-between align-items-center order-row">
+                        <div class="col-2"><b>#${order.orderId}</b></div>
+                        <div class="col-3">${order.email}</div>
+                        <div class="col-4 text-muted">${order.detailAddress} <span class="badge bg-light text-dark border">${order.quantity}개</span></div>
+                        <div class="col-3 text-end">
+                            <button class="btn btn-sm btn-outline-primary" onclick="fillEditForm(${order.orderId}, '${order.email}', '${order.detailAddress}', ${order.quantity})">수정</button>
+                            <button class="btn btn-sm btn-outline-danger" onclick="deleteOrder(${order.orderId})">삭제</button>
+                        </div>
+                    </li>`;
+                    orderList.insertAdjacentHTML('beforeend', item);
+                });
+            });
+    }
+
+    // [제출 버튼 통합 로직]
+    function submitOrder() {
+        if (editModeOrderId) executeUpdate(editModeOrderId); // 수정 모드면 PUT
+        else createOrder(); // 일반 모드면 POST
+    }
+
+    // [1. 주문 생성 로직 (POST)]
+    function createOrder() {
+        const email = document.getElementById('email').value;
+        const address = document.getElementById('address').value;
+        const postcode = document.getElementById('postcode').value;
+        const quantity = document.getElementById('quantity').value;
+
+        if (!email || !address) {
+            alert("이메일과 주소를 입력해주세요!");
+            return;
+        }
+
+        const payload = {
+            email: email,
+            postalCode: postcode,
+            detailAddress: address,
+            items: [{productId: 1, quantity: parseInt(quantity)}]
+        };
+
+        fetch('/api/orders', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(payload)
+        })
+            .then(res => {
+                if (res.ok) {
+                    alert("✅ 관리자 권한으로 주문이 생성되었습니다.");
+                    document.getElementById('orderForm').reset();
+                    document.getElementById('searchEmail').value = email;
+                    loadOrders();
+                } else {
+                    alert("❌ 생성 실패: 상품 정보나 입력값을 확인하세요.");
+                }
+            });
+    }
+
+    // [2. 수정 폼 채우기 (우측 폼이 수정용으로 변신!)]
+    function fillEditForm(orderId, email, address, quantity) {
+        editModeOrderId = orderId;
+        document.getElementById('email').value = email;
+        document.getElementById('address').value = address;
+        document.getElementById('quantity').value = quantity;
+        document.getElementById('formTitle').innerText = "수동 주문 수정";
+
+        // 버튼 디자인을 '수정 모드'로 변경
+        const btn = document.getElementById('submitBtn');
+        btn.innerText = "주문 수정하기 (저장)";
+        btn.classList.replace('btn-dark', 'btn-primary');
+        document.getElementById('cancelBtn').style.display = 'block';
+    }
+
+    // [3. 수정 취소 로직]
+    function cancelEdit() {
+        editModeOrderId = null;
+        document.getElementById('orderForm').reset();
+        document.getElementById('formTitle').innerText = "수동 주문 생성";
+
+        // 버튼을 다시 '생성 모드'로 복구
+        const btn = document.getElementById('submitBtn');
+        btn.innerText = "주문 생성하기";
+        btn.classList.replace('btn-primary', 'btn-dark');
+        document.getElementById('cancelBtn').style.display = 'none';
+    }
+
+    // [4. 진짜 수정 API (PUT) 호출 로직]
+    function executeUpdate(orderId) {
+        const payload = {
+            email: document.getElementById('email').value,
+            detailAddress: document.getElementById('address').value,
+            quantity: parseInt(document.getElementById('quantity').value)
+        };
+
+        fetch(`/api/orders/${orderId}`, {
+            method: 'PUT',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(payload)
+        })
+            .then(res => {
+                if (res.ok) {
+                    alert("✅ 주문(이메일, 주소, 수량)이 완벽하게 수정되었습니다!");
+                    cancelEdit(); // 폼을 원래대로 돌려놓음
+                    loadAllOrders(); // 바뀐 데이터로 목록 새로고침
+                } else {
+                    alert("❌ 수정 실패!");
+                }
+            });
+    }
+
+    // [주문 삭제 (DELETE)]
+    function deleteOrder(orderId) {
+        if (confirm(`정말 #${orderId}번 주문을 삭제하시겠습니까?`)) {
+            fetch(`/api/orders/${orderId}`, {
+                method: 'DELETE'
+            })
+                .then(res => {
+                    if (res.ok) {
+                        alert("🗑️ 주문이 삭제되었습니다.");
+                        loadAllOrders();
+                    } else {
+                        alert("❌ 삭제 실패!");
+                    }
+                });
+        }
+    }
+</script>
+</body>
+</html>

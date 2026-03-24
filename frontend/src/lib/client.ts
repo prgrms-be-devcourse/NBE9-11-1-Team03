@@ -4,9 +4,11 @@ export async function fetchApi(url: string, options?: RequestInit) {
         ...options,
     });
     const text = await res.text();
-    console.log("응답 내용:", text);  // ← 콘솔에서 확인
+    console.log("응답 내용:", text);
 
     if (!res.ok) throw new Error(`API 오류: ${res.status}`);
-    
-    return JSON.parse(text);  // text로만 파싱
+
+    if (!text) return null;  // ← 빈 응답이면 null 반환
+
+    return JSON.parse(text);
 }
