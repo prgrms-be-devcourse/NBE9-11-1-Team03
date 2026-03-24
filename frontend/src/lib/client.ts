@@ -1,14 +1,22 @@
 export async function fetchApi(url: string, options?: RequestInit) {
-    const res = await fetch(`http://localhost:8080${url}`, {
-        headers: { 'Content-Type': 'application/json' },
-        ...options,
-    });
-    const text = await res.text();
-    console.log("응답 내용:", text);
+  const res = await fetch(`http://localhost:8080${url}`, {
+    ...options,
+    headers: {
+      ...(options?.body ? { "Content-Type": "application/json" } : {}),
+      ...(options?.headers || {}),
+    },
+  });
 
-    if (!res.ok) throw new Error(`API 오류: ${res.status}`);
+  const text = await res.text();
+  console.log("응답 내용:", text);
 
-    if (!text) return null;  // ← 빈 응답이면 null 반환
+  if (!res.ok) {
+    throw new Error(text || `API 오류: ${res.status}`);
+  }
 
-    return JSON.parse(text);
+  if (!text) {
+    return null;
+  }
+
+  return JSON.parse(text);
 }

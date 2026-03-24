@@ -92,10 +92,6 @@ public class OrderService {
 
         List<Orders> orders = orderRepository.findAll();
 
-        if (orders.isEmpty()) {
-            throw new CustomException(HttpStatus.NOT_FOUND, "주문 내역이 없습니다.");
-        }
-
         List<OrderResponseDto> result = new ArrayList<>();
 
         for (Orders order : orders) {
@@ -138,10 +134,6 @@ public class OrderService {
         Customers customer = existingCustomer.get();
 
         List<Orders> orders = orderRepository.findAllByCustomers(customer);
-
-        if (orders.isEmpty()) {
-            throw new CustomException(HttpStatus.NOT_FOUND, "주문 내역이 없습니다.");
-        }
 
         List<OrderResponseDto> result = new ArrayList<>();
 
@@ -354,6 +346,4 @@ public class OrderService {
         orderRepository.save(order);
     }
     ///  관리자 조회 기능 종료
-
-
 }
