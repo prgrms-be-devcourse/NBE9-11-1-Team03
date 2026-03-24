@@ -69,6 +69,8 @@ JavaChip/
 ```
 🗄 ERD
 
+```mermaid
+
 erDiagram
     Customers ||--o{ Orders : "places"
     Orders ||--|{ OrderItems : "contains"
@@ -98,7 +100,7 @@ erDiagram
         Integer prodQuantity
         Integer prodPrice
     }
-
+```
 🚀 실행 방법
 Backend
 1. 레포지토리 클론
