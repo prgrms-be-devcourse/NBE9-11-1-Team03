@@ -5,6 +5,7 @@ import com.back.team03.javachip.domain.customer.entity.Customers;
 import com.back.team03.javachip.domain.customer.repository.CustomerRepository;
 import com.back.team03.javachip.domain.order.dto.OrderRequestDto;
 import com.back.team03.javachip.domain.order.dto.OrderResponseDto;
+import com.back.team03.javachip.domain.order.dto.OrderUpdateRequest;
 import com.back.team03.javachip.domain.order.entity.OrderItems;
 import com.back.team03.javachip.domain.order.entity.Orders;
 import com.back.team03.javachip.domain.order.repository.OrderItemRepository;
@@ -12,8 +13,11 @@ import com.back.team03.javachip.domain.order.repository.OrderRepository;
 import com.back.team03.javachip.domain.product.entity.Product;
 import com.back.team03.javachip.domain.product.repository.ProductRepository;
 
+import com.back.team03.javachip.global.exception.CustomException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
