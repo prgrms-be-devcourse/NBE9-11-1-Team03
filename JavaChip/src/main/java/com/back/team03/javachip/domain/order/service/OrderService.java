@@ -282,4 +282,78 @@ public class OrderService {
 
         orderRepository.delete(order);
     }
+
+    ///  관리자 조회 기능
+    // 품목별 조회
+    public List<OrderResponseDto> getOrdersByProduct(Long prodId) {
+
+        productRepository.findById(prodId)
+                .orElseThrow(() -> new CustomException(HttpStatus.NOT_FOUND, "존재하지 않는 상품입니다."));
+
+        List<Orders> orders = orderRepository.findAllByProductId(prodId);
+
+        if (orders.isEmpty()) {
+            throw new CustomException(HttpStatus.NOT_FOUND, "해당 상품의 주문이 없습니다.");
+        }
+
+        List<OrderResponseDto> result = new ArrayList<>();
+        for (Orders order : orders) {
+            List<OrderItems> orderItems = orderItemRepository.findAllByOrder(order);
+            result.add(new OrderResponseDto(order, orderItems));
+        }
+        return result;
+    }
+
+    // 상태별 조회
+    public List<OrderResponseDto> getOrdersByState(boolean isOrderState) {
+
+        List<Orders> orders = orderRepository.findAllByIsOrderState(isOrderState);
+
+        if (orders.isEmpty()) {
+            throw new CustomException(HttpStatus.NOT_FOUND, "해당 상태의 주문이 없습니다.");
+        }
+
+        List<OrderResponseDto> result = new ArrayList<>();
+        for (Orders order : orders) {
+            List<OrderItems> orderItems = orderItemRepository.findAllByOrder(order);
+            result.add(new OrderResponseDto(order, orderItems));
+        }
+        return result;
+    }
+
+    // 오후 2시 기준 미완료 전체 주문 조회
+    public List<OrderResponseDto> getPendingOrdersForDelivery() {
+
+        LocalDateTime start = getOrderStartTime();
+        LocalDateTime end = start.plusDays(1);
+
+        List<Orders> orders = orderRepository.findAllByIsOrderStateAndOrderTimeBetween(
+                false, start, end
+        );
+
+        if (orders.isEmpty()) {
+            throw new CustomException(HttpStatus.NOT_FOUND, "해당 시간대 미완료 주문이 없습니다.");
+        }
+
+        List<OrderResponseDto> result = new ArrayList<>();
+        for (Orders order : orders) {
+            List<OrderItems> orderItems = orderItemRepository.findAllByOrder(order);
+            result.add(new OrderResponseDto(order, orderItems));
+        }
+        return result;
+    }
+
+    // 주문 상태 변경
+    @Transactional
+    public void updateOrderState(Long orderId) {
+
+        Orders order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new CustomException(HttpStatus.NOT_FOUND, "존재하지 않는 주문입니다."));
+
+        order.setOrderState(true);
+        orderRepository.save(order);
+    }
+    ///  관리자 조회 기능 종료
+
+
 }
