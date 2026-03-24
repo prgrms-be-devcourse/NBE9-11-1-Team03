@@ -185,7 +185,7 @@ public class OrderService {
 //        LocalDateTime now = LocalDateTime.of(2026, 3, 21, 15, 0);
 
 //        // 실제 사용할 때는 아래로 변경
-         LocalDateTime now = LocalDateTime.now();
+        LocalDateTime now = LocalDateTime.now();
 //
         LocalDateTime todayAt2pm = now.toLocalDate().atTime(14, 0);
 
