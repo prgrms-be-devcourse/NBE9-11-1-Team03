@@ -1,5 +1,6 @@
 package com.back.team03.javachip.domain.order.service;
 
+
 import com.back.team03.javachip.domain.customer.entity.Customers;
 import com.back.team03.javachip.domain.customer.repository.CustomerRepository;
 import com.back.team03.javachip.domain.order.dto.OrderRequestDto;
@@ -53,7 +54,7 @@ public class OrderService {
         order.setPostalCode(dto.postalCode());
         order.setDetailAddress(dto.detailAddress());
         order.setOrderTime(LocalDateTime.now());
-        order.setCustomer(customer);
+        order.setCustomers(customer);
         orderRepository.save(order);
 
         // 3. items 리스트 순회하면서 OrderItem 저장
@@ -132,7 +133,7 @@ public class OrderService {
 
         Customers customer = existingCustomer.get();
 
-        List<Orders> orders = orderRepository.findAllByCustomer(customer);
+        List<Orders> orders = orderRepository.findAllByCustomers(customer);
 
         if (orders.isEmpty()) {
             throw new IllegalArgumentException("주문 내역이 없습니다.");
@@ -163,7 +164,7 @@ public class OrderService {
         LocalDateTime end = start.plusDays(1);
 
         List<Orders> orders = orderRepository
-                .findAllByCustomerAndOrderTimeBetween(customer, start, end);
+                .findAllByCustomersAndOrderTimeBetween(customer, start, end);
 
         if (orders.isEmpty()) {
             throw new IllegalArgumentException("해당 시간대 주문이 없습니다.");
@@ -185,7 +186,7 @@ public class OrderService {
 //        LocalDateTime now = LocalDateTime.of(2026, 3, 21, 15, 0);
 
 //        // 실제 사용할 때는 아래로 변경
-         LocalDateTime now = LocalDateTime.now();
+        LocalDateTime now = LocalDateTime.now();
 //
         LocalDateTime todayAt2pm = now.toLocalDate().atTime(14, 0);
 
