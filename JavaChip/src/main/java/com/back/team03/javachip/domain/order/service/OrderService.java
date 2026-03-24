@@ -13,9 +13,11 @@ import com.back.team03.javachip.domain.order.repository.OrderRepository;
 import com.back.team03.javachip.domain.product.entity.Product;
 import com.back.team03.javachip.domain.product.repository.ProductRepository;
 
-import jakarta.transaction.Transactional;
+import com.back.team03.javachip.global.exception.CustomException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -67,7 +69,7 @@ public class OrderService {
             Optional<Product> existingProduct = productRepository.findById(item.productId());
 
             if (!existingProduct.isPresent()) {
-                throw new IllegalArgumentException("존재하지 않는 상품입니다.");
+                throw new CustomException(HttpStatus.NOT_FOUND, "존재하지 않는 상품입니다.");
             }
 
             Product product = existingProduct.get();
@@ -91,7 +93,7 @@ public class OrderService {
         List<Orders> orders = orderRepository.findAll();
 
         if (orders.isEmpty()) {
-            throw new IllegalArgumentException("주문 내역이 없습니다.");
+            throw new CustomException(HttpStatus.NOT_FOUND, "주문 내역이 없습니다.");
         }
 
         List<OrderResponseDto> result = new ArrayList<>();
@@ -110,7 +112,7 @@ public class OrderService {
         Optional<Orders> existingOrder = orderRepository.findById(orderId);
 
         if (!existingOrder.isPresent()) {
-            throw new IllegalArgumentException("존재하지 않는 주문입니다.");
+            throw new CustomException(HttpStatus.NOT_FOUND, "존재하지 않는 주문입니다.");
         }
 
         Orders order = existingOrder.get();
@@ -118,7 +120,7 @@ public class OrderService {
         List<OrderItems> orderItems = orderItemRepository.findAllByOrder(order);
 
         if (orderItems.isEmpty()) {
-            throw new IllegalArgumentException("주문 상세 내역이 없습니다.");
+            throw new CustomException(HttpStatus.NOT_FOUND, "주문 상세 내역이 없습니다.");
         }
 
         return new OrderResponseDto(order, orderItems);
@@ -130,7 +132,7 @@ public class OrderService {
         Optional<Customers> existingCustomer = customerRepository.findByEmail(email);
 
         if (!existingCustomer.isPresent()) {
-            throw new IllegalArgumentException("존재하지 않는 고객입니다.");
+            throw new CustomException(HttpStatus.NOT_FOUND, "존재하지 않는 고객입니다.");
         }
 
         Customers customer = existingCustomer.get();
@@ -138,7 +140,7 @@ public class OrderService {
         List<Orders> orders = orderRepository.findAllByCustomers(customer);
 
         if (orders.isEmpty()) {
-            throw new IllegalArgumentException("주문 내역이 없습니다.");
+            throw new CustomException(HttpStatus.NOT_FOUND, "주문 내역이 없습니다.");
         }
 
         List<OrderResponseDto> result = new ArrayList<>();
@@ -157,7 +159,7 @@ public class OrderService {
         Optional<Customers> existingCustomer = customerRepository.findByEmail(email);
 
         if (!existingCustomer.isPresent()) {
-            throw new IllegalArgumentException("존재하지 않는 고객입니다.");
+            throw new CustomException(HttpStatus.NOT_FOUND, "존재하지 않는 고객입니다.");
         }
 
         Customers customer = existingCustomer.get();
@@ -169,7 +171,7 @@ public class OrderService {
                 .findAllByCustomersAndOrderTimeBetween(customer, start, end);
 
         if (orders.isEmpty()) {
-            throw new IllegalArgumentException("해당 시간대 주문이 없습니다.");
+            throw new CustomException(HttpStatus.NOT_FOUND, "해당 시간대에 주문이 존재하지 않습니다.");
         }
 
         List<OrderResponseDto> result = new ArrayList<>();
