@@ -14,7 +14,8 @@ public class ManagerService {
 
     private final ManagerRepository managerRepository;
 
-    public ManagerLoginResponseDto login(ManagerLoginRequestDto requestDto, HttpSession session) {
+    public ManagerLoginResponseDto login(ManagerLoginRequestDto requestDto,
+                                         HttpSession session) {
 
         // adminId로 관리자 조회
         Manager manager = managerRepository.findByAdminId(requestDto.getAdminId())
