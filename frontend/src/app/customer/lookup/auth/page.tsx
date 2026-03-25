@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import OrderList from "../list/page";
+import { useRouter } from "next/navigation";
 
 type Item = {
   productId: number;
@@ -24,6 +25,7 @@ export default function OrderSearch() {
   const [email, setEmail] = useState("");
   const [orders, setOrders] = useState<Order[] | null>(null);
   const [loading, setLoading] = useState(false);
+  const router = useRouter();
 
   const handleSearch = async () => {
     setLoading(true);
@@ -50,6 +52,22 @@ export default function OrderSearch() {
     <>
       {/* 폰트 */}
       <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
+
+      <header
+                style={{
+                    background: "#fff", borderBottom: "1px solid #ddd6cc",
+                    padding: "18px 40px", display: "flex",
+                    alignItems: "center", justifyContent: "space-between",
+                }}>
+                <div
+                    onClick={() => router.push(`/customer/order`)}
+                    style={{
+                        fontFamily: "'Playfair Display', serif", color: "black", fontSize: "1.3rem",
+                        cursor: "pointer"
+                    }}>
+                    Grids <span style={{ color: "#3a6b8a" }}>&</span> Circles
+                </div>
+            </header>
 
       <div
         style={{
