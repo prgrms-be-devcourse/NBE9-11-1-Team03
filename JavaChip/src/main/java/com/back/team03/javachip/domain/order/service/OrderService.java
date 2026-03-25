@@ -1,9 +1,11 @@
 package com.back.team03.javachip.domain.order.service;
 
+
 import com.back.team03.javachip.domain.customer.entity.Customers;
 import com.back.team03.javachip.domain.customer.repository.CustomerRepository;
 import com.back.team03.javachip.domain.order.dto.OrderRequestDto;
 import com.back.team03.javachip.domain.order.dto.OrderResponseDto;
+import com.back.team03.javachip.domain.order.dto.OrderUpdateRequest;
 import com.back.team03.javachip.domain.order.entity.OrderItems;
 import com.back.team03.javachip.domain.order.entity.Orders;
 import com.back.team03.javachip.domain.order.repository.OrderItemRepository;
@@ -11,8 +13,11 @@ import com.back.team03.javachip.domain.order.repository.OrderRepository;
 import com.back.team03.javachip.domain.product.entity.Product;
 import com.back.team03.javachip.domain.product.repository.ProductRepository;
 
+import com.back.team03.javachip.global.exception.CustomException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -27,11 +32,6 @@ public class OrderService {
     private final CustomerRepository customerRepository;
     private final OrderItemRepository orderItemRepository;
     private final ProductRepository productRepository;
-
-    //주문 전체 조회
-    public List<Orders> findAll() {
-        return orderRepository.findAll();
-    }
 
     // 주문 생성
     public OrderResponseDto createOrder(OrderRequestDto dto) {
@@ -53,7 +53,7 @@ public class OrderService {
         order.setPostalCode(dto.postalCode());
         order.setDetailAddress(dto.detailAddress());
         order.setOrderTime(LocalDateTime.now());
-        order.setCustomer(customer);
+        order.setCustomers(customer);
         orderRepository.save(order);
 
         // 3. items 리스트 순회하면서 OrderItem 저장
@@ -64,7 +64,7 @@ public class OrderService {
             Optional<Product> existingProduct = productRepository.findById(item.productId());
 
             if (!existingProduct.isPresent()) {
-                throw new IllegalArgumentException("존재하지 않는 상품입니다.");
+                throw new CustomException(HttpStatus.NOT_FOUND, "존재하지 않는 상품입니다.");
             }
 
             Product product = existingProduct.get();
@@ -87,10 +87,6 @@ public class OrderService {
 
         List<Orders> orders = orderRepository.findAll();
 
-        if (orders.isEmpty()) {
-            throw new IllegalArgumentException("주문 내역이 없습니다.");
-        }
-
         List<OrderResponseDto> result = new ArrayList<>();
 
         for (Orders order : orders) {
@@ -107,7 +103,7 @@ public class OrderService {
         Optional<Orders> existingOrder = orderRepository.findById(orderId);
 
         if (!existingOrder.isPresent()) {
-            throw new IllegalArgumentException("존재하지 않는 주문입니다.");
+            throw new CustomException(HttpStatus.NOT_FOUND, "존재하지 않는 주문입니다.");
         }
 
         Orders order = existingOrder.get();
@@ -115,7 +111,7 @@ public class OrderService {
         List<OrderItems> orderItems = orderItemRepository.findAllByOrder(order);
 
         if (orderItems.isEmpty()) {
-            throw new IllegalArgumentException("주문 상세 내역이 없습니다.");
+            throw new CustomException(HttpStatus.NOT_FOUND, "주문 상세 내역이 없습니다.");
         }
 
         return new OrderResponseDto(order, orderItems);
@@ -127,16 +123,12 @@ public class OrderService {
         Optional<Customers> existingCustomer = customerRepository.findByEmail(email);
 
         if (!existingCustomer.isPresent()) {
-            throw new IllegalArgumentException("존재하지 않는 고객입니다.");
+            throw new CustomException(HttpStatus.NOT_FOUND, "존재하지 않는 고객입니다.");
         }
 
         Customers customer = existingCustomer.get();
 
-        List<Orders> orders = orderRepository.findAllByCustomer(customer);
-
-        if (orders.isEmpty()) {
-            throw new IllegalArgumentException("주문 내역이 없습니다.");
-        }
+        List<Orders> orders = orderRepository.findAllByCustomers(customer);
 
         List<OrderResponseDto> result = new ArrayList<>();
 
@@ -154,7 +146,7 @@ public class OrderService {
         Optional<Customers> existingCustomer = customerRepository.findByEmail(email);
 
         if (!existingCustomer.isPresent()) {
-            throw new IllegalArgumentException("존재하지 않는 고객입니다.");
+            throw new CustomException(HttpStatus.NOT_FOUND, "존재하지 않는 고객입니다.");
         }
 
         Customers customer = existingCustomer.get();
@@ -163,10 +155,10 @@ public class OrderService {
         LocalDateTime end = start.plusDays(1);
 
         List<Orders> orders = orderRepository
-                .findAllByCustomerAndOrderTimeBetween(customer, start, end);
+                .findAllByCustomersAndOrderTimeBetween(customer, start, end);
 
         if (orders.isEmpty()) {
-            throw new IllegalArgumentException("해당 시간대 주문이 없습니다.");
+            throw new CustomException(HttpStatus.NOT_FOUND, "해당 시간대에 주문이 존재하지 않습니다.");
         }
 
         List<OrderResponseDto> result = new ArrayList<>();
@@ -185,7 +177,7 @@ public class OrderService {
 //        LocalDateTime now = LocalDateTime.of(2026, 3, 21, 15, 0);
 
 //        // 실제 사용할 때는 아래로 변경
-         LocalDateTime now = LocalDateTime.now();
+        LocalDateTime now = LocalDateTime.now();
 //
         LocalDateTime todayAt2pm = now.toLocalDate().atTime(14, 0);
 
@@ -195,4 +187,158 @@ public class OrderService {
             return todayAt2pm;
         }
     }
+
+    @Transactional
+    public OrderResponseDto updateOrder(Long orderId, OrderUpdateRequest dto) {
+        Orders order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 주문입니다."));
+
+        // 1. 이메일 수정
+        if (dto.getEmail() != null && !dto.getEmail().isBlank()) {
+            Customers customer = customerRepository.findByEmail(dto.getEmail())
+                    .orElseGet(() -> customerRepository.save(
+                            Customers.builder().email(dto.getEmail()).build()
+                    ));
+            order.setCustomers(customer);
+        }
+
+        // 2. 주소 수정
+        if (dto.getDetailAddress() != null && !dto.getDetailAddress().isBlank()) {
+            order.setDetailAddress(dto.getDetailAddress());
+        }
+
+        // 3. 품목별 수량 수정 / 추가 / 삭제
+        List<OrderItems> existingItems = orderItemRepository.findAllByOrder(order);
+
+        if (dto.getItems() != null) {
+            java.util.Map<Long, OrderItems> existingItemMap = new java.util.HashMap<>();
+            for (OrderItems existingItem : existingItems) {
+                existingItemMap.put(existingItem.getProduct().getProdId(), existingItem);
+            }
+
+            for (OrderUpdateRequest.ItemUpdateRequest itemDto : dto.getItems()) {
+                if (itemDto.getProductId() == null || itemDto.getQuantity() == null) {
+                    continue;
+                }
+
+                Long productId = itemDto.getProductId();
+                Integer quantity = itemDto.getQuantity();
+                OrderItems existingItem = existingItemMap.get(productId);
+
+                // 수량이 0 이하이면 해당 품목 삭제
+                if (quantity <= 0) {
+                    if (existingItem != null) {
+                        orderItemRepository.delete(existingItem);
+                    }
+                    continue;
+                }
+
+                Product product = productRepository.findById(productId)
+                        .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 상품입니다. productId=" + productId));
+
+                // 기존 품목이 있으면 수정
+                if (existingItem != null) {
+                    existingItem.setProdQuantity(quantity.longValue());
+                    existingItem.setProdPrice(product.getProdPrice() * quantity);
+                    orderItemRepository.save(existingItem);
+                }
+                // 기존 품목이 없으면 새로 추가
+                else {
+                    OrderItems newItem = new OrderItems();
+                    newItem.setOrder(order);
+                    newItem.setProduct(product);
+                    newItem.setProdQuantity(quantity.longValue());
+                    newItem.setProdPrice(product.getProdPrice() * quantity);
+                    orderItemRepository.save(newItem);
+                }
+            }
+        }
+
+        return new OrderResponseDto(order, orderItemRepository.findAllByOrder(order));
+    }
+
+    @Transactional
+    public void deleteOrder(Long orderId) {
+        Orders order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 주문입니다."));
+
+        List<OrderItems> items = orderItemRepository.findAllByOrder(order);
+        if (!items.isEmpty()) {
+            orderItemRepository.deleteAll(items);
+        }
+
+        orderRepository.delete(order);
+    }
+
+    ///  관리자 조회 기능
+    // 품목별 조회
+    public List<OrderResponseDto> getOrdersByProduct(Long prodId) {
+
+        productRepository.findById(prodId)
+                .orElseThrow(() -> new CustomException(HttpStatus.NOT_FOUND, "존재하지 않는 상품입니다."));
+
+        List<Orders> orders = orderRepository.findAllByProductId(prodId);
+
+        if (orders.isEmpty()) {
+            throw new CustomException(HttpStatus.NOT_FOUND, "해당 상품의 주문이 없습니다.");
+        }
+
+        List<OrderResponseDto> result = new ArrayList<>();
+        for (Orders order : orders) {
+            List<OrderItems> orderItems = orderItemRepository.findAllByOrder(order);
+            result.add(new OrderResponseDto(order, orderItems));
+        }
+        return result;
+    }
+
+    // 상태별 조회
+    public List<OrderResponseDto> getOrdersByState(boolean isOrderState) {
+
+        List<Orders> orders = orderRepository.findAllByIsOrderState(isOrderState);
+
+        if (orders.isEmpty()) {
+            throw new CustomException(HttpStatus.NOT_FOUND, "해당 상태의 주문이 없습니다.");
+        }
+
+        List<OrderResponseDto> result = new ArrayList<>();
+        for (Orders order : orders) {
+            List<OrderItems> orderItems = orderItemRepository.findAllByOrder(order);
+            result.add(new OrderResponseDto(order, orderItems));
+        }
+        return result;
+    }
+
+    // 오후 2시 기준 미완료 전체 주문 조회
+    public List<OrderResponseDto> getPendingOrdersForDelivery() {
+
+        LocalDateTime start = getOrderStartTime();
+        LocalDateTime end = start.plusDays(1);
+
+        List<Orders> orders = orderRepository.findAllByIsOrderStateAndOrderTimeBetween(
+                false, start, end
+        );
+
+        if (orders.isEmpty()) {
+            throw new CustomException(HttpStatus.NOT_FOUND, "해당 시간대 미완료 주문이 없습니다.");
+        }
+
+        List<OrderResponseDto> result = new ArrayList<>();
+        for (Orders order : orders) {
+            List<OrderItems> orderItems = orderItemRepository.findAllByOrder(order);
+            result.add(new OrderResponseDto(order, orderItems));
+        }
+        return result;
+    }
+
+    // 주문 상태 변경
+    @Transactional
+    public void updateOrderState(Long orderId) {
+
+        Orders order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new CustomException(HttpStatus.NOT_FOUND, "존재하지 않는 주문입니다."));
+
+        order.setOrderState(true);
+        orderRepository.save(order);
+    }
+    ///  관리자 조회 기능 종료
 }

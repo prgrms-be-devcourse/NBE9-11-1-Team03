@@ -1,5 +1,7 @@
 package com.back.team03.javachip.global.initdata;
 
+import com.back.team03.javachip.domain.manager.entity.Manager;
+import com.back.team03.javachip.domain.manager.repository.ManagerRepository;
 import com.back.team03.javachip.domain.product.entity.Product;
 import com.back.team03.javachip.domain.product.repository.ProductRepository;
 import lombok.RequiredArgsConstructor;
@@ -12,9 +14,20 @@ import org.springframework.stereotype.Component;
 public class DataInit implements ApplicationRunner {
 
     private final ProductRepository productRepository;
+    private final ManagerRepository managerRepository;
+
 
     @Override
     public void run(ApplicationArguments args) {
+
+        // 테스트용 관리자 계정 초기 데이터
+        if (managerRepository.count() == 0) {
+            managerRepository.save(Manager.builder()
+                    .adminId("admin")
+                    .adminPassword("1234")
+                    .build());
+        }
+
         if (productRepository.count() == 0) {
             productRepository.save(Product.builder()
                     .prodName("에티오피아 예가체프")
