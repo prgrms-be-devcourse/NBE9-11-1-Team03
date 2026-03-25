@@ -14,6 +14,7 @@ public record OrderResponseDto(
         String detailAddress,
         LocalDateTime orderTime,
         Long totalPrice,
+        boolean isOrderState,
         List<ItemResponse> items
 ) {
     public record ItemResponse(
@@ -33,6 +34,7 @@ public record OrderResponseDto(
                 orderItems.stream()
                         .mapToLong(OrderItems::getProdPrice)
                         .sum(),
+                order.isOrderState(),
                 orderItems.stream()
                         .map(item -> new ItemResponse(
                                 item.getProduct().getProdId(),

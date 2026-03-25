@@ -6,15 +6,19 @@ import com.back.team03.javachip.domain.order.dto.OrderRequestDto;
 import com.back.team03.javachip.domain.order.dto.OrderResponseDto;
 import com.back.team03.javachip.domain.order.dto.OrderUpdateRequest;
 import com.back.team03.javachip.domain.order.entity.Orders;
+import com.back.team03.javachip.domain.order.scheduler.OrderScheduler;
 import com.back.team03.javachip.domain.order.service.OrderService;
+import com.back.team03.javachip.global.exception.CustomException;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 
 @RestController
@@ -24,6 +28,7 @@ import java.util.List;
 public class OrderController {
 
     private final OrderService orderService;
+    private final OrderScheduler orderScheduler;
 
     // 주문 생성
     @PostMapping
@@ -73,5 +78,22 @@ public class OrderController {
     public ResponseEntity<Void> deleteOrder(@PathVariable Long orderId) {
         orderService.deleteOrder(orderId);
         return ResponseEntity.noContent().build();
+    }
+
+
+    //---------------------------------------------------------------------------
+    // 개별 주문 상태 변경
+    @PatchMapping("/{orderId}/state")
+    public ResponseEntity<OrderResponseDto> updateOrderState(
+            @PathVariable Long orderId) {
+        orderService.toggleOrderState(orderId);
+        return ResponseEntity.ok(orderService.toggleOrderState(orderId));
+    }
+
+    // 전체 일괄 변경
+    @PostMapping("/state/bulk-update")
+    public ResponseEntity<Void> bulkUpdateOrderState() {
+        orderScheduler.updateOrderState();
+        return ResponseEntity.ok().build();
     }
 }

@@ -135,7 +135,7 @@ export default function AdminOrdersPage() {
       showToast("주소 검색 스크립트를 불러오는 중입니다.");
       return;
     }
-  
+
     new window.daum.Postcode({
       oncomplete: function (data) {
         const address = data.roadAddress || data.jibunAddress || "";
@@ -228,13 +228,13 @@ export default function AdminOrdersPage() {
     setPostalCode(order.postalCode ?? "");
     setRoadAddress(order.detailAddress ?? "");
     setDetailAddress("");
-  
+
     const next = makeInitialQuantities(products);
     order.items?.forEach((item) => {
       next[item.productId] = item.prodQuantity;
     });
     setQuantities(next);
-  
+
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
@@ -252,29 +252,29 @@ export default function AdminOrdersPage() {
         prodQuantity: quantities[product.prodId] ?? 0,
       }))
       .filter((item) => item.prodQuantity > 0);
-  
+
     const fullAddress = `${roadAddress} ${detailAddress}`.trim();
-  
+
     if (!email.trim()) {
       showToast("이메일을 입력해주세요.");
       return;
     }
-  
+
     if (!postalCode.trim()) {
       showToast("주소를 검색해주세요.");
       return;
     }
-  
+
     if (!roadAddress.trim()) {
       showToast("주소를 검색해주세요.");
       return;
     }
-  
+
     if (items.length === 0) {
       showToast("최소 1개 이상의 상품 수량을 입력해주세요.");
       return;
     }
-  
+
     try {
       await fetchApi("/api/v1/orders", {
         method: "POST",
@@ -285,7 +285,7 @@ export default function AdminOrdersPage() {
           items,
         }),
       });
-  
+
       showToast("주문 생성 완료!");
       resetForm();
       await loadAllOrders();
@@ -297,14 +297,14 @@ export default function AdminOrdersPage() {
 
   const executeUpdate = async () => {
     if (editingOrderId === null) return;
-  
+
     const items: UpdateItemDto[] = products.map((product) => ({
       productId: product.prodId,
       quantity: quantities[product.prodId] ?? 0,
     }));
-  
+
     const fullAddress = `${roadAddress} ${detailAddress}`.trim();
-  
+
     try {
       await fetchApi(`/api/v1/orders/${editingOrderId}`, {
         method: "PATCH",
@@ -314,7 +314,7 @@ export default function AdminOrdersPage() {
           items,
         }),
       });
-  
+
       showToast("수정 완료!");
       resetForm();
       await loadAllOrders();
@@ -344,6 +344,36 @@ export default function AdminOrdersPage() {
     } catch (error) {
       console.error(error);
       showToast("삭제에 실패했습니다.");
+    }
+  };
+
+  // 개별 상태 토글
+  const toggleOrderState = async (orderId: number) => {
+    try {
+      await fetchApi(`/api/v1/orders/${orderId}/state`, {
+        method: "PATCH",
+      });
+      showToast("상태 변경 완료!");
+      await loadAllOrders();
+    } catch (error) {
+      console.error(error);
+      showToast("상태 변경에 실패했습니다.");
+    }
+  };
+
+  // 전체 일괄 완료 처리
+  const bulkUpdateOrderState = async () => {
+    const ok = window.confirm("14:00 이전 주문을 전체 완료 처리하시겠습니까?");
+    if (!ok) return;
+    try {
+      await fetchApi("/api/v1/orders/state/bulk-update", {
+        method: "POST",
+      });
+      showToast("일괄 완료 처리 완료!");
+      await loadAllOrders();
+    } catch (error) {
+      console.error(error);
+      showToast("일괄 처리에 실패했습니다.");
     }
   };
 
@@ -466,15 +496,30 @@ export default function AdminOrdersPage() {
               Order management
             </div>
 
-            <div
-              style={{
-                fontFamily: "'Playfair Display', serif",
-                fontSize: "1.15rem",
-                color: "#1a1410",
-                marginBottom: "16px",
-              }}
-            >
-              전체 주문 목록
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" }}>
+              <div
+                style={{
+                  fontFamily: "'Playfair Display', serif",
+                  fontSize: "1.15rem",
+                  color: "#1a1410",
+                }}
+              >
+                전체 주문 목록
+              </div>
+              <button
+                onClick={bulkUpdateOrderState}
+                style={{
+                  background: "#3a6b8a",
+                  color: "#fff",
+                  border: "none",
+                  borderRadius: "8px",
+                  padding: "8px 16px",
+                  fontSize: "0.82rem",
+                  cursor: "pointer",
+                }}
+              >
+                14:00 이전 전체 완료 처리
+              </button>
             </div>
 
             {loading ? (
@@ -554,9 +599,8 @@ export default function AdminOrdersPage() {
                           fontWeight: 500,
                           background: order.isOrderState ? "#d4edda" : "#fff3cd",
                           color: order.isOrderState ? "#2d6a4f" : "#856404",
-                          border: `1px solid ${
-                            order.isOrderState ? "#b7dfca" : "#ffeaa7"
-                          }`,
+                          border: `1px solid ${order.isOrderState ? "#b7dfca" : "#ffeaa7"
+                            }`,
                         }}
                       >
                         {order.isOrderState ? "완료" : "접수"}
@@ -622,6 +666,19 @@ export default function AdminOrdersPage() {
                         }}
                       >
                         수정
+                      </button>
+
+                      {/* 토글 버튼 추가 */}
+                      <button
+                        onClick={() => toggleOrderState(order.orderId)}
+                        style={{
+                          background: order.isOrderState ? "#856404" : "#2d6a4f",
+                          color: "#fff", border: "none",
+                          borderRadius: "8px", padding: "10px 12px",
+                          fontSize: "0.85rem", cursor: "pointer",
+                        }}
+                      >
+                        {order.isOrderState ? "접수" : "완료"}
                       </button>
                       <button
                         onClick={() => deleteOrder(order.orderId)}

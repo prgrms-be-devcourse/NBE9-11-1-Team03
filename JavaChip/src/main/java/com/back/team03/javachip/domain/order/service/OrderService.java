@@ -341,4 +341,19 @@ public class OrderService {
         orderRepository.save(order);
     }
     ///  관리자 조회 기능 종료
+
+
+
+    @Transactional
+    public OrderResponseDto toggleOrderState(Long orderId) {
+        Orders order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new CustomException(
+                        HttpStatus.NOT_FOUND, "존재하지 않는 주문입니다."));
+
+        order.setOrderState(!order.isOrderState());
+        orderRepository.save(order);
+
+        List<OrderItems> orderItems = orderItemRepository.findAllByOrder(order);
+        return new OrderResponseDto(order, orderItems);
+    }
 }

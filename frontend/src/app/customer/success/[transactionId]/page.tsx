@@ -87,12 +87,34 @@ export default function OrderSuccess() {
                             }}>
                                 결제가 완료되었습니다!
                             </div>
-                            <div style={{ color: "#7a7068", fontSize: "0.88rem" }}>
-                                결제 방식
+                        </div>
+
+                        {/* 유의사항 카드 */}
+                        <div style={{
+                            background: "#fff",
+                            borderRadius: "16px",
+                            border: "1px solid #ddd6cc",
+                            padding: "20px 24px",
+                            boxShadow: "0 4px 24px rgba(26,20,16,0.08)"
+                        }}>
+                            <div style={{
+                                fontWeight: 500,
+                                color: "#1a1410",
+                                marginBottom: "12px",
+                                fontSize: "0.9rem"
+                            }}>
+                                유의사항
                             </div>
-                            <div style={{ color: "#1a1410", fontSize: "0.88rem" }}>
-                                무통장 입금 : 1234 - 56 - 7890 국민은행
-                            </div>
+                            <ul style={{
+                                paddingLeft: "16px",
+                                display: "flex",
+                                flexDirection: "column",
+                                gap: "6px"
+                            }}>
+                                <li style={{ color: "#7a7068", fontSize: "0.83rem" }}>
+                                    당일 오후 2시 이후 주문은 다음날 배송이 시작됩니다.
+                                </li>
+                            </ul>
                         </div>
 
                         {/* 주문 상세 카드 */}
@@ -159,36 +181,7 @@ export default function OrderSuccess() {
                             </div>
                         </div>
 
-                        {/* 유의사항 카드 */}
-                        <div style={{
-                            background: "#fff",
-                            borderRadius: "16px",
-                            border: "1px solid #ddd6cc",
-                            padding: "20px 24px",
-                            boxShadow: "0 4px 24px rgba(26,20,16,0.08)"
-                        }}>
-                            <div style={{
-                                fontWeight: 500,
-                                color: "#1a1410",
-                                marginBottom: "12px",
-                                fontSize: "0.9rem"
-                            }}>
-                                유의사항
-                            </div>
-                            <ul style={{
-                                paddingLeft: "16px",
-                                display: "flex",
-                                flexDirection: "column",
-                                gap: "6px"
-                            }}>
-                                <li style={{ color: "#7a7068", fontSize: "0.83rem" }}>
-                                    주문 결제는 당일 오후 11시 59분 59초까지 결제가 진행되어야 합니다
-                                </li>
-                                <li style={{ color: "#7a7068", fontSize: "0.83rem" }}>
-                                    결제가 진행되지 않았을 경우 주문 취소 처리됩니다.
-                                </li>
-                            </ul>
-                        </div>
+                        
 
                         {/* 돌려보기 버튼 */}
                         <div style={{ display: "flex", justifyContent: "flex-end" }}>
