@@ -32,7 +32,7 @@ export default function AdminLoginPage() {
 
             showToast(res.message); // "로그인 성공"
             setTimeout(() => {
-                router.push("/admin/admin-order");
+                router.push("/admin/order");
             }, 700);
         } catch (err: unknown) {
             const message =
