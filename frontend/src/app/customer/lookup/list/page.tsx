@@ -1,5 +1,7 @@
 "use client";
 
+import { useRouter } from "next/navigation";
+
 type Item = {
   productId: number;
   prodName: string;
@@ -22,21 +24,45 @@ type Props = {
 };
 
 export default function OrderList({ orders }: Props) {
+  const router = useRouter();
   const safeOrders: Order[] = Array.isArray(orders) ? orders : [];
 
   return (
     <>
       {/* 폰트 */}
-      <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
+      <link
+        href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;700&family=DM+Sans:wght@300;400;500&display=swap"
+        rel="stylesheet"
+      />
 
       <div
         style={{
+          position: "relative", // 버튼 위치 기준
           fontFamily: "'DM Sans', sans-serif",
           background: "#f5f0eb",
           minHeight: "100vh",
-          padding: "40px 20px"
+          padding: "40px 20px",
         }}
       >
+        {/* 홈으로 돌아가기 버튼 */}
+        <button
+          onClick={() => router.replace(`/customer/order`)}
+          style={{
+            position: "absolute",
+            top: "20px",
+            left: "20px",
+            background: "#fff",
+            border: "1px solid #ddd6cc",
+            borderRadius: "12px",
+            padding: "8px 14px",
+            fontSize: "0.85rem",
+            cursor: "pointer",
+            boxShadow: "0 2px 10px rgba(0,0,0,0.05)",
+          }}
+        >
+          ← 주문하러가기
+        </button>
+
         {/* 타이틀 */}
         <div
           style={{
@@ -99,6 +125,8 @@ export default function OrderList({ orders }: Props) {
                 </span>
                 <span>이메일: {order.email}</span>
                 <span>주소: {order.detailAddress}</span>
+                <span>주문시간: {order.orderTime}</span>
+
               </div>
 
               {/* 상품 목록 */}
