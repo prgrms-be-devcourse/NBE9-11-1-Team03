@@ -1,6 +1,7 @@
 package com.back.team03.javachip.domain.order.entity;
 
 import com.back.team03.javachip.domain.customer.entity.Customers;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -37,6 +38,7 @@ public class Orders {
     @OneToMany(mappedBy = "order")
     private List<OrderItems> orderItems = new ArrayList<>();
 
+    @JsonProperty("isOrderState") // Jackson이 is를 제거하지 않도록 필드명 고정
     @Column(nullable = false) // 관리자에서 주문 상태 조회를 위한 컬럼
     private boolean isOrderState = false; // false: 주문 접수, true: 주문 완료
 
