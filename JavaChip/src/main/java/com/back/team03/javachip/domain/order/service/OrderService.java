@@ -33,11 +33,6 @@ public class OrderService {
     private final OrderItemRepository orderItemRepository;
     private final ProductRepository productRepository;
 
-    //주문 전체 조회
-    public List<Orders> findAll() {
-        return orderRepository.findAll();
-    }
-
     // 주문 생성
     public OrderResponseDto createOrder(OrderRequestDto dto) {
 
