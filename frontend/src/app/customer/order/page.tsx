@@ -53,10 +53,20 @@ export default function OrderPage() {
     };
 
     const handleSubmit = async () => {
-        if (!email || !roadAddress || !detailAddress) {
-            showToast("이메일, 주소를 모두 입력해주세요.");
+        if (!email ){
+            showToast("이메일을 입력해주세요.");
             return;
         }
+        if (!roadAddress){
+            showToast("주소를 입력해주세요.");
+            return;
+        }
+
+        if (!detailAddress ){
+            showToast("상세주소를 입력해주세요.");
+            return;
+        }
+
         if (Object.keys(cart).length === 0) {
             showToast("상품을 하나 이상 선택해주세요.");
             return;
@@ -82,7 +92,12 @@ export default function OrderPage() {
                     router.replace(`/customer/success/${data.orderId}`); // ← orderId 하나만 받아서 이동
                 }, 1500);
             })
-            .catch(() => showToast("주문에 실패했습니다. 다시 시도해주세요."));
+            .catch((err) => {
+                const msg = err.message?.includes("{")
+                    ? JSON.parse(err.message).message
+                    : err.message;
+                showToast(msg);
+            });
     };
 
     const showToast = (msg: string) => {
