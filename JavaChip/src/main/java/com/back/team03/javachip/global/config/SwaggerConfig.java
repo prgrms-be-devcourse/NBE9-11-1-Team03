@@ -33,4 +33,14 @@ public class SwaggerConfig {
                 .pathsToExclude("/api/**")
                 .build();
     }
+
+    // 관리자
+    @Bean
+    public GroupedOpenApi groupApiManager() {
+        return GroupedOpenApi.builder()
+                .group("manager")
+                .pathsToMatch("/api/manager/**")
+                .build();
+    }
+
 }
