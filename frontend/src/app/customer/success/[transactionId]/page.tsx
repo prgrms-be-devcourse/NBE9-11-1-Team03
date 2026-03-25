@@ -24,6 +24,21 @@ export default function OrderSuccess() {
         <>
             <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
 
+            <header
+                style={{
+                    background: "#fff", borderBottom: "1px solid #ddd6cc",
+                    padding: "18px 40px", display: "flex",
+                    alignItems: "center", justifyContent: "space-between",
+                }}>
+                <div
+                    onClick={() => router.push(`/customer/order`)}
+                    style={{
+                        fontFamily: "'Playfair Display', serif", color: "black", fontSize: "1.3rem",
+                        cursor: "pointer"
+                    }}>
+                    Grids <span style={{ color: "#3a6b8a" }}>&</span> Circles
+                </div>
+            </header>
             <div style={{
                 fontFamily: "'DM Sans', sans-serif",
                 background: "#f5f0eb",

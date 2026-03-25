@@ -109,12 +109,17 @@ export default function OrderPage() {
             <div style={{ fontFamily: "'DM Sans', sans-serif", background: "#f5f0eb", minHeight: "100vh" }}>
 
                 {/* 헤더 */}
-                <header style={{
+                <header 
+                    style={{
                     background: "#fff", borderBottom: "1px solid #ddd6cc",
                     padding: "18px 40px", display: "flex",
-                    alignItems: "center", justifyContent: "space-between"
+                    alignItems: "center", justifyContent: "space-between",
                 }}>
-                    <div style={{ fontFamily: "'Playfair Display', serif", color: "black", fontSize: "1.3rem" }}>
+                    <div 
+                    onClick={() => router.push(`/customer/order`)}
+                    style={{ fontFamily: "'Playfair Display', serif", color: "black", fontSize: "1.3rem", 
+                        cursor: "pointer"
+                    }}>
                         Grids <span style={{ color: "#3a6b8a" }}>&</span> Circles
                     </div>
                     <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>

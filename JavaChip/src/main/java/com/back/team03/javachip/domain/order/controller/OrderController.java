@@ -9,6 +9,7 @@ import com.back.team03.javachip.domain.order.entity.Orders;
 import com.back.team03.javachip.domain.order.service.OrderService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -28,7 +29,7 @@ public class OrderController {
     @PostMapping
     @Operation(summary = "주문 생성", description = "상품을 선택하고 주문을 생성합니다.")
     public ResponseEntity<OrderResponseDto> createOrder(
-            @RequestBody OrderRequestDto dto) {
+            @RequestBody @Valid OrderRequestDto dto) {
         return ResponseEntity.ok(orderService.createOrder(dto));
     }
 
